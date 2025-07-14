@@ -39,8 +39,7 @@ const AssistantHome = ({ setScreen }) => {
 
       {/* Assistant Intro */}
       <p className="text-gray-500 text-sm text-center">
-        Hi <strong className="text-black">Jay</strong>, I’m{" "}
-        <span className="text-yellow-500 font-bold">Anna!</span> Your personal assistant.
+Buddy!        <span className="text-yellow-500 font-bold">Anna!</span> Your personal assistant.
       </p>
       <h2 className="text-2xl font-bold mt-3 text-center text-gray-800">
         How can I help you today?
