@@ -20,6 +20,11 @@ const TalkAssistant = ({ goBack }) => {
       }
     `;
     document.head.appendChild(style);
+
+    // Cleanup on unmount (IMPORTANT)
+    return () => {
+      window.speechSynthesis.cancel(); // Stop AI voice when leaving component
+    };
   }, []);
 
   const handleMicClick = () => {
@@ -59,7 +64,13 @@ const TalkAssistant = ({ goBack }) => {
   const speak = (text) => {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-US";
+    window.speechSynthesis.cancel(); // Stop any previous speech
     window.speechSynthesis.speak(utterance);
+  };
+
+  const handleGoBack = () => {
+    window.speechSynthesis.cancel(); // stop speech when going back manually
+    goBack();
   };
 
   return (
@@ -105,7 +116,7 @@ const TalkAssistant = ({ goBack }) => {
 
       {/* Back Button */}
       <button
-        onClick={goBack}
+        onClick={handleGoBack}
         className="mt-8 w-full max-w-xs bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-full text-sm shadow-lg transition"
       >
         ⬅️ Back to Home
