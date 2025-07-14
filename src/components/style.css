@@ -1,0 +1,36 @@
+/* === Add this in style.css === */
+
+.blob-container {
+  position: relative;
+  width: 12rem; /* 48 in Tailwind (w-48) */
+  height: 12rem;
+  margin-bottom: 1.5rem;
+}
+
+.blob {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #fcd34d, #f59e0b);
+  opacity: 0.9;
+  filter: blur(20px);
+  animation: blob 7s infinite ease-in-out;
+}
+
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(20px, -10px) scale(1.1);
+  }
+  66% {
+    transform: translate(-15px, 10px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
