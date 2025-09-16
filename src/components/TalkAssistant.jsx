@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { ArrowLeft } from "lucide-react";
 
 const TalkAssistant = ({ goBack }) => {
-  const [transcript, setTranscript] = useState("");
-  const [response, setResponse] = useState("");
   const [listening, setListening] = useState(false);
 
   const API_KEY = "AIzaSyAbD1lDO-feqzyXHdtf8BG3tqvV0bbBQ4E";
@@ -12,23 +11,24 @@ const TalkAssistant = ({ goBack }) => {
   useEffect(() => {
     const style = document.createElement("style");
     style.innerHTML = `
-      @keyframes blob {
-        0% { transform: translate(0px, 0px) scale(1); }
-        33% { transform: translate(20px, -10px) scale(1.1); }
-        66% { transform: translate(-15px, 10px) scale(0.9); }
-        100% { transform: translate(0px, 0px) scale(1); }
+      @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+        100% { transform: translateY(0px); }
+      }
+      @keyframes pulse {
+        0% { transform: scale(1); opacity: 0.7; }
+        50% { transform: scale(1.15); opacity: 1; }
+        100% { transform: scale(1); opacity: 0.7; }
       }
     `;
     document.head.appendChild(style);
-
-    // Cleanup on unmount (IMPORTANT)
-    return () => {
-      window.speechSynthesis.cancel(); // Stop AI voice when leaving component
-    };
+    return () => window.speechSynthesis.cancel();
   }, []);
 
   const handleMicClick = () => {
-    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    const recognition = new (window.SpeechRecognition ||
+      window.webkitSpeechRecognition)();
     recognition.lang = "en-US";
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
@@ -38,7 +38,6 @@ const TalkAssistant = ({ goBack }) => {
 
     recognition.onresult = async (event) => {
       const voiceText = event.results[0][0].transcript;
-      setTranscript(voiceText);
       setListening(false);
       await getAIResponse(voiceText);
     };
@@ -48,79 +47,71 @@ const TalkAssistant = ({ goBack }) => {
 
   const getAIResponse = async (userText) => {
     try {
-      const payload = {
-        contents: [{ parts: [{ text: userText }] }],
-      };
+      const payload = { contents: [{ parts: [{ text: userText }] }] };
       const res = await axios.post(url, payload);
-      const aiText = res.data.candidates[0].content.parts[0].text;
-      setResponse(aiText);
+      const aiText = res.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
       speak(aiText);
     } catch (err) {
-      console.error(err);
-      setResponse("Something went wrong 😓");
+      speak("Sorry, something went wrong.");
     }
   };
 
   const speak = (text) => {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-US";
-    window.speechSynthesis.cancel(); // Stop any previous speech
+    utterance.pitch = 1.1;
+    utterance.rate = 1.05;
+    window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
   };
 
   const handleGoBack = () => {
-    window.speechSynthesis.cancel(); // stop speech when going back manually
+    window.speechSynthesis.cancel();
     goBack();
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col justify-center items-center px-4 py-8">
-      {/* Blob Animation */}
-      <div className="relative w-40 h-40 sm:w-48 sm:h-48 mb-6">
-        <div
-          className="absolute inset-0 rounded-full opacity-80 blur-2xl"
-          style={{
-            background: "radial-gradient(circle at 30% 30%, #93c5fd, #3b82f6)",
-            animation: "blob 7s infinite ease-in-out",
-          }}
-        />
-        <div className="absolute inset-0 rounded-full bg-blue-300 mix-blend-overlay"></div>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-950 flex flex-col items-center justify-center relative px-4">
+      {/* Back Button */}
+      <button
+        onClick={handleGoBack}
+        className="absolute top-4 left-4 flex items-center gap-2 px-5 py-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all duration-300 shadow-lg backdrop-blur-md"
+      >
+        <ArrowLeft className="w-5 h-5" />
+        <span className="hidden sm:inline font-medium text-sm">Back</span>
+      </button>
 
-      <h2 className="text-2xl font-bold text-center text-gray-800">🎤 Talking to Anna</h2>
-      <p className="text-sm text-gray-500 mt-2 text-center">
-        Speak now. Anna will reply with voice.
-      </p>
+      {/* Robot */}
+      <div
+        className="w-80 h-80 sm:w-[22rem] sm:h-[22rem] mb-10 drop-shadow-2xl"
+        style={{ animation: "float 5s infinite ease-in-out" }}
+      >
+        <iframe
+          src="https://my.spline.design/genkubgreetingrobot-a2hUVWPlnA19sgOBQUCUVb1i/"
+          frameBorder="0"
+          width="100%"
+          height="100%"
+          className="rounded-full"
+        />
+      </div>
 
       {/* Mic Button */}
       <button
         onClick={handleMicClick}
-        className="mt-6 bg-blue-600 text-white px-5 py-2 rounded-full shadow hover:bg-blue-700 transition text-sm"
+        className={`w-24 h-24 sm:w-28 sm:h-28 rounded-full flex items-center justify-center text-5xl shadow-2xl transition-all duration-300 ${
+          listening
+            ? "bg-red-500 ring-8 ring-red-400 animate-pulse"
+            : "bg-gradient-to-r from-purple-600 to-pink-600 hover:scale-110"
+        }`}
+        style={{ animation: listening ? "pulse 1s infinite" : "none" }}
       >
-        {listening ? "🎙️ Listening..." : "🎤 Start Talking"}
+        🎤
       </button>
 
-      {/* Output Section */}
-      <div className="mt-6 w-full max-w-sm bg-gray-100 rounded-lg p-4 text-sm">
-        {transcript && (
-          <p className="mb-2">
-            <strong className="text-gray-700">You:</strong> {transcript}
-          </p>
-        )}
-        {response && (
-          <p>
-            <strong className="text-gray-700">Anna:</strong> {response}
-          </p>
-        )}
-      </div>
-
-      {/* Back Button */}
-      <button
-        onClick={handleGoBack}
-        className="mt-8 w-full max-w-xs bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-full text-sm shadow-lg transition"
-      >
-        ⬅️ Back to Home
-      </button>
+      {/* Status Text */}
+      <p className="text-gray-300 mt-6 text-lg sm:text-xl font-medium text-center">
+        {listening ? "Listening..." : "Tap & speak with Anna"}
+      </p>
     </div>
   );
 };
